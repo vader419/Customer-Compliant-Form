@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Audit Trail — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.audit-header-row { display:grid;grid-template-columns:180px 140px 1fr 150px;align-items:center;gap:1rem;padding:.6rem 1.25rem;background:var(--surface2);border-bottom:2px solid var(--border);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--label); }
+.audit-data-row { display:grid;grid-template-columns:180px 140px 1fr 150px;align-items:flex-start;gap:1rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);font-size:.82rem;transition:background .15s; }
+.audit-data-row:last-child{border-bottom:none}
+.audit-data-row:hover{background:#f9fafc}
+.action-tag { display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:4px;font-size:.68rem;font-weight:700;font-family:monospace;letter-spacing:.03em; }
+.tag-login { background:#dbeafe;color:#1d4ed8; }
+.tag-submit { background:#dcfce7;color:#15803d; }
+.tag-update { background:#fef9c3;color:#854d0e; }
+.tag-status { background:#f3e8ff;color:#7e22ce; }
+.tag-logout { background:var(--surface2);color:var(--muted); }
+.tag-default { background:var(--navy-light);color:var(--navy); }
+.export-btn { display:flex;align-items:center;gap:.5rem; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center"><div class="header-title">QA / Regulatory Portal</div><div class="header-sub">Cospharm Investment (Pty) Ltd</div></div>
+    <div class="header-right"><div class="user-chip"><div class="user-avatar" id="userAvatar"></div><span id="userChipName"></span><span class="badge badge-minor" id="userRoleBadge"></span></div></div>
+  </div>
+</header>
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="page-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy)">🗂 Full Audit Trail</h2>
+    <div style="display:flex;gap:.75rem">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      <span class="td-muted" id="totalLogs"></span>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.25rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;box-shadow:var(--shadow)">
+    <div class="filter-item" style="display:flex;flex-direction:column;gap:.3rem">
+      <label class="field-label">Action Type</label>
+      <select id="filterAction" onchange="applyFilters()" style="min-width:180px;padding:.5rem .75rem;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem">
+        <option value="">All Actions</option>
+        <option value="COMPLAINT_SUBMITTED">Complaint Submitted</option>
+        <option value="COMPLAINT_UPDATED">Complaint Updated</option>
+        <option value="STATUS_CHANGED">Status Changed</option>
+        <option value="USER_LOGIN">User Login</option>
+        <option value="USER_LOGOUT">User Logout</option>
+      </select>
+    </div>
+    <div class="filter-item" style="display:flex;flex-direction:column;gap:.3rem">
+      <label class="field-label">Search</label>
+      <input type="text" id="filterSearch" placeholder="Search detail, user, complaint…" oninput="applyFilters()" style="min-width:220px;padding:.5rem .75rem;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.85rem">
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <div class="card">
+    <div class="audit-header-row">
+      <div>Timestamp</div>
+      <div>Action</div>
+      <div>Detail</div>
+      <div>User</div>
+    </div>
+    <div id="auditBody"></div>
+  </div>
+</div>
+
+<script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+let allLogs = [];
+
+async function init() {
+  const sess = await requireAuth();
+  if (!sess) return;
+  renderHeader(sess, 'audit');
+  allLogs = await DB.Audit.getAll();
+  document.getElementById('totalLogs').textContent = `${allLogs.length} log entries`;
+  applyFilters();
+}
+
+function actionTag(action) {
+  const map = {
+    USER_LOGIN: 'tag-login', USER_LOGOUT: 'tag-logout',
+    COMPLAINT_SUBMITTED: 'tag-submit', COMPLAINT_UPDATED: 'tag-update',
+    STATUS_CHANGED: 'tag-status'
+  };
+  const cls = map[action] || 'tag-default';
+  const label = action.replace(/_/g,' ');
+  return `<span class="action-tag ${cls}">${label}</span>`;
+}
+
+function applyFilters() {
+  const action = document.getElementById('filterAction').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  let list = allLogs.filter(l => {
+    if (action && l.action !== action) return false;
+    if (search) {
+      const hay = [l.action, l.detail, l.userName, l.complaintId].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const body = document.getElementById('auditBody');
+  if (!list.length) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No logs found</div><div class="empty-sub">Adjust your filters</div></div>`;
+    return;
+  }
+
+  body.innerHTML = list.map(l => `
+    <div class="audit-data-row">
+      <div>
+        <div style="font-weight:500;font-size:.8rem">${fmtDate(l.timestamp)}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${new Date(l.timestamp).toLocaleTimeString('en-NA',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div>${actionTag(l.action)}</div>
+      <div>
+        <div>${l.detail}</div>
+        ${l.complaintId?`<div style="font-size:.72rem;color:var(--muted);margin-top:.2rem"><a href="qa-review.html?id=${l.complaintId}" style="color:var(--navy);text-decoration:none">→ Complaint #${l.complaintId}</a></div>`:''}
+      </div>
+      <div style="color:var(--muted);font-size:.78rem">${l.userName||'System'}</div>
+    </div>`).join('');
+}
+
+function clearFilters() {
+  document.getElementById('filterAction').value='';
+  document.getElementById('filterSearch').value='';
+  applyFilters();
+}
+
+function exportCSV() {
+  const rows = [['Timestamp','Action','Detail','Complaint ID','User']];
+  allLogs.forEach(l=>rows.push([l.timestamp, l.action, l.detail, l.complaintId||'', l.userName||'']));
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`cospharm-audit-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Review — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.complaint-ref-bar { background:var(--navy);color:white;padding:.7rem 1.5rem;border-radius:var(--radius) var(--radius) 0 0;display:flex;justify-content:space-between;align-items:center;font-size:.82rem; }
+.ref-label { opacity:.6;font-size:.72rem; }
+.complaint-source { background:var(--accent-light);border:1px solid #f5c6c2;border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1rem;font-size:.83rem;color:var(--accent);font-weight:500; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center"><div class="header-title">QA / Regulatory Portal</div><div class="header-sub">Cospharm Investment (Pty) Ltd</div></div>
+    <div class="header-right">
+      <div class="user-chip"><div class="user-avatar" id="userAvatar"></div><span id="userChipName"></span><span class="badge badge-minor" id="userRoleBadge"></span></div>
+    </div>
+  </div>
+</header>
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="form-wrap">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+    <h2 style="font-size:1.05rem;font-weight:700;color:var(--navy)" id="pageTitle">🔍 New Complaint Review</h2>
+    <a href="qa-complaints.html" class="btn btn-ghost btn-sm">← Back to Complaints</a>
+  </div>
+
+  <div id="sourceAlert" class="complaint-source" style="display:none">
+    📥 This complaint was submitted via the <strong>Client Complaint Form</strong>.
+  </div>
+
+  <!-- COMPLAINT REF BAR -->
+  <div class="complaint-ref-bar">
+    <div><div class="ref-label">Complaint Reference</div><div id="refDisplay" style="font-weight:700;font-family:monospace">Auto-generated on save</div></div>
+    <div style="display:flex;gap:.75rem;align-items:center">
+      <span id="statusDisplay"></span>
+      <div class="ref-label" id="dateDisplay"></div>
+    </div>
+  </div>
+
+  <!-- CLIENT INFO (read-only when loaded from submission) -->
+  <div class="form-section" style="border-radius:0 0 var(--radius) var(--radius);margin-top:0;border-top:none">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">1</span><span class="section-title">Customer / Reporter Details</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col3">
+      <div class="field"><label class="field-label">Institution</label><input type="text" id="institution" placeholder="Institution name"></div>
+      <div class="field"><label class="field-label">Contact Person</label><input type="text" id="contactPerson" placeholder="Full name"></div>
+      <div class="field"><label class="field-label">Designation</label><input type="text" id="designation" placeholder="Role / title"></div>
+      <div class="field"><label class="field-label">Telephone</label><input type="tel" id="contactPhone" placeholder="+264 ..."></div>
+      <div class="field"><label class="field-label">Email</label><input type="email" id="contactEmail" placeholder="email@example.com"></div>
+      <div class="field"><label class="field-label">Date Complaint Received</label><input type="date" id="dateReceived"></div>
+      <div class="field full">
+        <label class="field-label">Method of Complaint</label>
+        <div class="check-group" id="methodGroup">
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Email</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Phone</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>In Person</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>WhatsApp</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Other</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT DETAILS -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">2</span><span class="section-title">Product Details</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col3">
+      <div class="field"><label class="field-label">Generic Name</label><input type="text" id="genericName" placeholder="INN / Generic"></div>
+      <div class="field"><label class="field-label">Trade Name</label><input type="text" id="tradeName" placeholder="Brand name"></div>
+      <div class="field"><label class="field-label">Dosage Form</label><input type="text" id="dosageForm" placeholder="e.g. Tablet"></div>
+      <div class="field"><label class="field-label">Strength</label><input type="text" id="strength" placeholder="e.g. 500mg"></div>
+      <div class="field"><label class="field-label">Pack Size</label><input type="text" id="packSize" placeholder="e.g. 30 tablets"></div>
+      <div class="field"><label class="field-label">Manufacturer</label><input type="text" id="manufacturer" placeholder="Manufacturer"></div>
+      <div class="field"><label class="field-label">Batch / Lot Number</label><input type="text" id="batchNo" placeholder="Batch number"></div>
+      <div class="field"><label class="field-label">Expiry Date</label><input type="date" id="expiryDate"></div>
+      <div class="field"><label class="field-label">Invoice No.</label><input type="text" id="invoiceNo" placeholder="Invoice"></div>
+      <div class="field"><label class="field-label">Qty Received</label><input type="number" id="quantityReceived" placeholder="Units"></div>
+      <div class="field"><label class="field-label">Qty Affected</label><input type="number" id="quantityAffected" placeholder="Units"></div>
+      <div class="field"><label class="field-label">Date Received by Customer</label><input type="date" id="dateReceivedByCustomer"></div>
+      <div class="field full">
+        <label class="field-label">Storage Conditions</label>
+        <div class="radio-group">
+          <label class="radio-item" onclick="toggleRadio(this,'storage')"><input type="radio" name="storage"><span class="radio-dot"></span><span>2–8°C</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'storage')"><input type="radio" name="storage"><span class="radio-dot"></span><span>Room Temperature</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'storage')"><input type="radio" name="storage"><span class="radio-dot"></span><span>Other</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLAINT TYPE -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">3</span><span class="section-title">Complaint Types</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col1">
+      <div class="subsection-title">A. Product Quality Defect</div>
+      <div class="field">
+        <div class="check-group" id="typeGroupA">
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Broken tablets</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Cracked ampoules/vials</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Leakage</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Discolouration</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Foreign particles</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Labelling error</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Missing leaflet/package insert</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Incorrect strength</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Packaging defect</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Seal integrity compromised</span></label>
+        </div>
+      </div>
+      <div class="subsection-title">B. Distribution / Logistics</div>
+      <div class="field">
+        <div class="check-group" id="typeGroupB">
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Cold chain breach suspected</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Damaged during transit</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Short supply</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Wrong batch supplied</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Wrong product supplied</span></label>
+        </div>
+      </div>
+      <div class="subsection-title">C. Clinical / Patient Related</div>
+      <div class="field">
+        <div class="check-group" id="typeGroupC">
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Lack of efficacy</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Adverse reaction</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Other clinical concern</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">4</span><span class="section-title">Complaint Description &amp; Impact</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="field full"><label class="field-label">Detailed Description</label><textarea id="description" rows="5" placeholder="Full description including timeline..."></textarea></div>
+      <div class="field"><label class="field-label">Entire Batch Affected?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'batch')"><input type="radio" name="batch"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'batch')"><input type="radio" name="batch"><span class="radio-dot"></span><span>No</span></label><label class="radio-item" onclick="toggleRadio(this,'batch')"><input type="radio" name="batch"><span class="radio-dot"></span><span>Unknown</span></label></div>
+      </div>
+      <div class="field"><label class="field-label">% Affected</label><input type="number" id="pctAffected" placeholder="0–100" min="0" max="100"></div>
+      <div class="field"><label class="field-label">Patient Harm Reported?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'harm')"><input type="radio" name="harm"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'harm')"><input type="radio" name="harm"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+      <div class="field"><label class="field-label">Used on Patients?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'used')"><input type="radio" name="used"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'used')"><input type="radio" name="used"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+      <div class="field"><label class="field-label">Product Quarantined?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'qrtn')"><input type="radio" name="qrtn"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'qrtn')"><input type="radio" name="qrtn"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QA INTERNAL REVIEW -->
+  <div class="form-section" style="border-color:#c8d0e8">
+    <div class="section-head" onclick="toggleSection(this)" style="background:var(--navy-light)">
+      <span class="section-num navy">QA</span><span class="section-title">QA / Regulatory Internal Review</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col1">
+      <div class="warn-box">⚠ Internal section — visible to QA/Regulatory staff only</div>
+      <div class="field">
+        <label class="field-label">Case Status</label>
+        <div class="radio-group">
+          <label class="radio-item" onclick="toggleRadio(this,'cstatus')"><input type="radio" name="cstatus"><span class="radio-dot"></span><span>Open</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'cstatus')"><input type="radio" name="cstatus"><span class="radio-dot"></span><span>In Progress</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'cstatus')"><input type="radio" name="cstatus"><span class="radio-dot"></span><span>Closed</span></label>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+        <div class="field">
+          <label class="field-label">Severity Category</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'qacat')"><input type="radio" name="qacat"><span class="radio-dot"></span><span>Minor</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'qacat')"><input type="radio" name="qacat"><span class="radio-dot"></span><span>Major</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'qacat')" style="border-color:#fca5a5"><input type="radio" name="qacat"><span class="radio-dot"></span><span>Critical</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Batch Status</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'bstat')"><input type="radio" name="bstat"><span class="radio-dot"></span><span>Released</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'bstat')"><input type="radio" name="bstat"><span class="radio-dot"></span><span>Quarantine</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'bstat')"><input type="radio" name="bstat"><span class="radio-dot"></span><span>Blocked</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Investigation Required?</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'inv')"><input type="radio" name="inv"><span class="radio-dot"></span><span>Yes</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'inv')"><input type="radio" name="inv"><span class="radio-dot"></span><span>No</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Supplier Notified?</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'sup')"><input type="radio" name="sup"><span class="radio-dot"></span><span>Yes</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'sup')"><input type="radio" name="sup"><span class="radio-dot"></span><span>No</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">NMRC Notification?</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'nmrc')"><input type="radio" name="nmrc"><span class="radio-dot"></span><span>Yes</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'nmrc')"><input type="radio" name="nmrc"><span class="radio-dot"></span><span>No</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Feedback Sent to Client?</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'fbk')"><input type="radio" name="fbk"><span class="radio-dot"></span><span>Yes</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'fbk')"><input type="radio" name="fbk"><span class="radio-dot"></span><span>No</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">Root Cause Analysis</label><textarea id="qaRootCause" rows="3" placeholder="Describe the identified root cause..."></textarea></div>
+      <div class="field"><label class="field-label">Corrective &amp; Preventive Action (CAPA)</label><textarea id="qaCapa" rows="3" placeholder="Describe corrective and preventive measures taken..."></textarea></div>
+      <div class="field">
+        <label class="field-label">Decision / Outcome</label>
+        <div class="check-group" id="decisionGroup">
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Replace</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Credit</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Reject</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>Recall</span></label>
+          <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"><span class="check-box"></span><span>No Action Required</span></label>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="field"><label class="field-label">QA Pharmacist Name</label><input type="text" id="qaPharmacist" placeholder="Full name"></div>
+        <div class="field"><label class="field-label">Investigation Closed Date</label><input type="date" id="qaCloseDate"></div>
+      </div>
+      <div class="field"><label class="field-label">Internal Notes (confidential)</label><textarea id="internalNotes" rows="2" placeholder="Confidential notes not shared with client..."></textarea></div>
+    </div>
+  </div>
+
+  <!-- AUDIT TRAIL for this complaint -->
+  <div class="card" id="auditCard" style="display:none;margin-bottom:1.25rem">
+    <div class="card-header"><span class="card-title">🗂 Audit Trail for This Complaint</span></div>
+    <div class="audit-list" id="auditList"></div>
+  </div>
+
+  <div class="form-footer">
+    <div class="footer-note"><strong>QA Notifications:</strong> Changes are logged to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="75060005051a07011b1435161a06051d1407185b1a0712">[email&#160;protected]</a> audit trail.</div>
+    <div style="display:flex;gap:.75rem">
+      <a href="qa-complaints.html" class="btn btn-ghost">Cancel</a>
+      <button class="btn btn-navy" onclick="saveComplaint()">💾 Save Complaint</button>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+let currentSession = null;
+let editingId = null;
+
+async function init() {
+  currentSession = await requireAuth();
+  if (!currentSession) return;
+  renderHeader(currentSession, 'review');
+
+  const params = new URLSearchParams(window.location.search);
+  editingId = params.get('id') ? parseInt(params.get('id')) : null;
+
+  if (editingId) {
+    document.getElementById('pageTitle').textContent = '🔍 Reviewing Complaint';
+    document.getElementById('sourceAlert').style.display = 'block';
+    await loadComplaint(editingId);
+    await loadAuditTrail(editingId);
+  } else {
+    document.getElementById('dateReceived').value = new Date().toISOString().split('T')[0];
+    setSelected('cstatus', 'Open');
+  }
+}
+
+async function loadComplaint(id) {
+  const c = await DB.Complaints.getById(id);
+  if (!c) { alert('Complaint not found'); window.location.href='qa-complaints.html'; return; }
+
+  document.getElementById('refDisplay').textContent = c.ref;
+  document.getElementById('statusDisplay').innerHTML = statusBadge(c.status);
+  document.getElementById('dateDisplay').textContent = fmtDate(c.createdAt);
+
+  // Fill fields
+  const set = (id, val) => { const el=document.getElementById(id); if(el&&val!=null) el.value=val; };
+  set('institution', c.institution); set('contactPerson', c.contactPerson); set('designation', c.designation);
+  set('contactPhone', c.contactPhone); set('contactEmail', c.contactEmail); set('dateReceived', c.dateReceived?.split('T')[0]);
+  set('genericName', c.genericName); set('tradeName', c.tradeName); set('dosageForm', c.dosageForm);
+  set('strength', c.strength); set('packSize', c.packSize); set('manufacturer', c.manufacturer);
+  set('batchNo', c.batchNo); set('expiryDate', c.expiryDate?.split('T')[0]); set('invoiceNo', c.invoiceNo);
+  set('quantityReceived', c.quantityReceived); set('quantityAffected', c.quantityAffected);
+  set('dateReceivedByCustomer', c.dateReceivedByCustomer?.split('T')[0]);
+  set('description', c.description); set('pctAffected', c.pctAffected||c.estimatedPctAffected);
+  set('qaRootCause', c.qaRootCause); set('qaCapa', c.qaCapa);
+  set('qaPharmacist', c.qaPharmacist); set('qaCloseDate', c.closedAt?.split('T')[0]);
+  set('internalNotes', c.internalNotes);
+
+  if (c.storageConditions) setSelected('storage', c.storageConditions);
+  if (c.entireBatchAffected) setSelected('batch', c.entireBatchAffected);
+  if (c.patientHarm) setSelected('harm', c.patientHarm);
+  if (c.productUsedOnPatients) setSelected('used', c.productUsedOnPatients);
+  if (c.productQuarantined) setSelected('qrtn', c.productQuarantined);
+  if (c.qaCategory) setSelected('qacat', c.qaCategory);
+  if (c.qaBatchStatus) setSelected('bstat', c.qaBatchStatus);
+  if (c.qaInvestigationRequired) setSelected('inv', c.qaInvestigationRequired);
+  if (c.qaSupplierNotified) setSelected('sup', c.qaSupplierNotified);
+  if (c.qaNMRCRequired) setSelected('nmrc', c.qaNMRCRequired);
+  if (c.feedbackSentToClient) setSelected('fbk', c.feedbackSentToClient);
+
+  const statusMap = { open:'Open', in_progress:'In Progress', closed:'Closed' };
+  setSelected('cstatus', statusMap[c.status]||'Open');
+
+  setChecked(document.getElementById('methodGroup'), c.complaintMethods||[]);
+  const allTypes = [...(c.complaintTypes||[])];
+  setChecked(document.getElementById('typeGroupA'), allTypes);
+  setChecked(document.getElementById('typeGroupB'), allTypes);
+  setChecked(document.getElementById('typeGroupC'), allTypes);
+  setChecked(document.getElementById('decisionGroup'), c.qaDecisions||[]);
+}
+
+async function loadAuditTrail(id) {
+  const logs = await DB.Audit.getForComplaint(id);
+  if (!logs.length) return;
+  document.getElementById('auditCard').style.display='block';
+  document.getElementById('auditList').innerHTML = logs.map(l=>`
+    <div class="audit-row">
+      <div><div class="audit-action">${l.action}</div><div class="audit-time">${fmtDateTime(l.timestamp)}</div></div>
+      <div class="audit-detail">${l.detail}</div>
+      <div class="audit-user">${l.userName||'System'}</div>
+    </div>`).join('');
+}
+
+async function saveComplaint() {
+  const g = id => document.getElementById(id)?.value?.trim()||'';
+  const statusRaw = getSelected('cstatus');
+  const statusMap = { 'Open':'open', 'In Progress':'in_progress', 'Closed':'closed' };
+
+  const allTypes = [
+    ...getChecked(document.getElementById('typeGroupA')),
+    ...getChecked(document.getElementById('typeGroupB')),
+    ...getChecked(document.getElementById('typeGroupC')),
+  ];
+
+  const data = {
+    institution: g('institution'), contactPerson: g('contactPerson'), designation: g('designation'),
+    contactPhone: g('contactPhone'), contactEmail: g('contactEmail'), dateReceived: g('dateReceived'),
+    complaintMethods: getChecked(document.getElementById('methodGroup')),
+    genericName: g('genericName'), tradeName: g('tradeName'), dosageForm: g('dosageForm'),
+    strength: g('strength'), packSize: g('packSize'), manufacturer: g('manufacturer'),
+    batchNo: g('batchNo'), expiryDate: g('expiryDate'), invoiceNo: g('invoiceNo'),
+    quantityReceived: g('quantityReceived'), quantityAffected: g('quantityAffected'),
+    dateReceivedByCustomer: g('dateReceivedByCustomer'),
+    storageConditions: getSelected('storage'),
+    complaintTypes: allTypes,
+    description: g('description'),
+    entireBatchAffected: getSelected('batch'), patientHarm: getSelected('harm'),
+    productUsedOnPatients: getSelected('used'), productQuarantined: getSelected('qrtn'),
+    pctAffected: g('pctAffected'),
+    status: statusMap[statusRaw]||'open',
+    qaCategory: getSelected('qacat'), qaBatchStatus: getSelected('bstat'),
+    qaInvestigationRequired: getSelected('inv'), qaSupplierNotified: getSelected('sup'),
+    qaNMRCRequired: getSelected('nmrc'), feedbackSentToClient: getSelected('fbk'),
+    qaRootCause: g('qaRootCause'), qaCapa: g('qaCapa'),
+    qaDecisions: getChecked(document.getElementById('decisionGroup')),
+    qaPharmacist: g('qaPharmacist'), internalNotes: g('internalNotes'),
+  };
+
+  const closeDateVal = g('qaCloseDate');
+
+  if (editingId) {
+    const existing = await DB.Complaints.getById(editingId);
+    const updated = { ...existing, ...data, id: editingId };
+    if (data.status === 'closed' && !existing.closedAt) updated.closedAt = closeDateVal ? new Date(closeDateVal).toISOString() : new Date().toISOString();
+    await DB.Complaints.update(updated, currentSession.userId, currentSession.fullName, 'Complaint review updated by QA staff');
+    alert('✅ Complaint saved successfully!');
+    window.location.href = 'qa-complaints.html';
+  } el

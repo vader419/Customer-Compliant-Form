@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.admin-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.25rem; }
+.user-row { display:grid;grid-template-columns:36px 1fr 100px 90px 80px;align-items:center;gap:1rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);font-size:.83rem; }
+.user-row:last-child{border-bottom:none}
+.user-avatar-lg { width:34px;height:34px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0; }
+.user-name { font-weight:600;color:var(--text); }
+.user-meta { font-size:.72rem;color:var(--muted); }
+.db-stat { display:flex;justify-content:space-between;align-items:center;padding:.65rem 1.25rem;border-bottom:1px solid var(--border);font-size:.83rem; }
+.db-stat:last-child{border-bottom:none}
+.db-stat-label{color:var(--muted)} .db-stat-val{font-weight:700;color:var(--navy)}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center"><div class="header-title">Quality Assurance Portal</div><div class="header-sub">Cospharm Investment (Pty) Ltd</div></div>
+    <div class="header-right"><div class="user-chip"><div class="user-avatar" id="userAvatar"></div><span id="userChipName"></span><span class="badge badge-minor" id="userRoleBadge"></span></div></div>
+  </div>
+</header>
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="page-wrap">
+  <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:1.5rem">⚙️ Admin Panel</h2>
+
+  <div class="admin-grid fade-up">
+
+    <!-- User Management -->
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-header">
+        <span class="card-title">👥 User Management</span>
+        <button class="btn btn-navy btn-sm" onclick="showAddUser()">+ Add User</button>
+      </div>
+
+      <!-- Add user form -->
+      <div id="addUserForm" style="display:none;padding:1.5rem;border-bottom:1px solid var(--border);background:var(--surface2)">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="field"><label class="field-label">Full Name</label><input type="text" id="newFullName" placeholder="Full name"></div>
+          <div class="field"><label class="field-label">Username</label><input type="text" id="newUsername" placeholder="Username"></div>
+          <div class="field"><label class="field-label">Email</label><input type="email" id="newEmail" placeholder="email@example.com"></div>
+          <div class="field"><label class="field-label">Password</label><input type="password" id="newPassword" placeholder="Password"></div>
+          <div class="field"><label class="field-label">Role</label>
+            <select id="newRole" style="padding:.6rem .85rem;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem">
+              <option value="qa_staff">QA Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem">
+          <button class="btn btn-navy btn-sm" onclick="createUser()">Create User</button>
+          <button class="btn btn-ghost btn-sm" onclick="hideAddUser()">Cancel</button>
+        </div>
+        <div id="userError" style="margin-top:.75rem;color:var(--danger);font-size:.8rem;display:none"></div>
+      </div>
+
+      <div id="userList"></div>
+    </div>
+
+    <!-- Database Stats -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">🗄️ Database Statistics</span></div>
+      <div id="dbStats"></div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" style="border-color:#fca5a5">
+      <div class="card-header" style="background:var(--danger-light)"><span class="card-title" style="color:var(--danger)">⚠️ Danger Zone</span></div>
+      <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.25rem">Export Full Database</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Download all complaints as a JSON backup.</div>
+          <button class="btn btn-ghost btn-sm" onclick="exportDB()">⬇ Export JSON Backup</button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border)">
+        <div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--danger);margin-bottom:.25rem">Reset Entire Database</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">⚠ This permanently deletes ALL data including users, complaints, and audit logs.</div>
+          <button class="btn btn-danger btn-sm" onclick="resetDB()">🗑 Full Reset (Irreversible)</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+let currentSession = null;
+
+async function init() {
+  currentSession = await requireAuth();
+  if (!currentSession) return;
+  if (currentSession.role !== 'admin') { alert('Admin access required.'); window.location.href='qa-dashboard.html'; return; }
+  renderHeader(currentSession, 'admin');
+  await loadUsers();
+  await loadDBStats();
+}
+
+async function loadUsers() {
+  const users = await DB.Users.getAll();
+  const list = document.getElementById('userList');
+  list.innerHTML = `
+    <div style="display:grid;grid-template-columns:36px 1fr 100px 90px 80px;gap:1rem;padding:.6rem 1.25rem;background:var(--surface2);border-bottom:2px solid var(--border);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--label)">
+      <div></div><div>User</div><div>Role</div><div>Created</div><div>Actions</div>
+    </div>
+    ${users.map(u=>`
+    <div class="user-row">
+      <div class="user-avatar-lg">${u.fullName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+      <div>
+        <div class="user-name">${u.fullName}</div>
+        <div class="user-meta">${u.username} · ${u.email}</div>
+      </div>
+      <div><span class="badge ${u.role==='admin'?'badge-critical':'badge-minor'}">${u.role==='admin'?'Admin':'QA Staff'}</span></div>
+      <div class="user-meta">${fmtDate(u.createdAt)}</div>
+      <div>
+        ${u.id!==currentSession.userId?`<button onclick="toggleUser(${u.id})" class="btn btn-ghost btn-sm" style="color:${u.active?'var(--danger)':'var(--success)'}">${u.active?'Disable':'Enable'}</button>`:'<span class="td-muted">You</span>'}
+      </div>
+    </div>`).join('')}`;
+}
+
+async function loadDBStats() {
+  const complaints = await DB.Complaints.getAll();
+  const users = await DB.Users.getAll();
+  const audits = await DB.Audit.getAll();
+  document.getElementById('dbStats').innerHTML = [
+    ['Total Complaints', complaints.length],
+    ['Total Users', users.length],
+    ['Audit Log Entries', audits.length],
+    ['Open Cases', complaints.filter(c=>c.status==='open').length],
+    ['Closed Cases', complaints.filter(c=>c.status==='closed').length],
+    ['Critical Cases', complaints.filter(c=>c.qaCategory==='Critical').length],
+    ['Database', 'IndexedDB (Browser)'],
+    ['Version', 'Cospharm v1.0 — 2026'],
+  ].map(([l,v])=>`<div class="db-stat"><span class="db-stat-label">${l}</span><span class="db-stat-val">${v}</span></div>`).join('');
+}
+
+function showAddUser(){document.getElementById('addUserForm').style.display='block'}
+function hideAddUser(){document.getElementById('addUserForm').style.display='none';document.getElementById('userError').style.display='none'}
+
+async function createUser() {
+  const fn=document.getElementById('newFullName').value.trim();
+  const un=document.getElementById('newUsername').value.trim();
+  const em=document.getElementById('newEmail').value.trim();
+  const pw=document.getElementById('newPassword').value;
+  const role=document.getElementById('newRole').value;
+  const errEl=document.getElementById('userError');
+  if (!fn||!un||!pw) { errEl.textContent='Full name, username, and password are required.'; errEl.style.display='block'; return; }
+  try {
+    await DB.Users.create({fullName:fn, username:un, email:em, password:pw, role});
+    await DB.Audit.log({action:'USER_CREATED',detail:`New user created: ${un} (${role})`,userId:currentSession.userId,userName:currentSession.fullName});
+    hideAddUser(); await loadUsers(); await loadDBStats();
+    ['newFullName','newUsername','newEmail','newPassword'].forEach(id=>document.getElementById(id).value='');
+  } catch(e) { errEl.textContent=e.message; errEl.style.display='block'; }
+}
+
+async function toggleUser(id) {
+  const user = await DB.Users.getById(id);
+  if (!user) return;
+  user.active = !user.active;
+  await DB.Users.update(user);
+  await DB.Audit.log({action:'USER_UPDATED',detail:`User ${user.active?'enabled':'disabled'}: ${user.username}`,userId:currentSession.userId,userName:currentSession.fullName});
+  await loadUsers();
+}
+
+async function clearDemoData() {
+  if (!confirm('Remove the 6 demo complaints? This cannot be undone.')) return;
+  const all = await DB.Complaints.getAll();
+  // Demo data has no 'submittedViaForm' flag - clear first batch (they were seeded)
+  const db = await DB.openDB();
+  const tx = db.transaction('complaints','readwrite');
+  const store = tx.objectStore('complaints');
+  for (const c of all) store.delete(c.id);
+  await new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=rej;});
+  await DB.Audit.log({action:'DATA_CLEARED',detail:'Demo complaints cleared by admin',userId:currentSession.userId,userName:currentSession.fullName});
+  await loadDBStats();
+  alert('Demo data cleared.');
+}
+
+async function exportDB() {
+  const complaints = await DB.Complaints.getAll();
+  const blob = new Blob([JSON.stringify(complaints,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cospharm-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+async function resetDB() {
+  if (!confirm('⚠ This will permanently delete ALL data — complaints, users, and audit logs. Type "RESET" to confirm.')) return;
+  const answer = prompt('Type RESET to confirm:');
+  if (answer !== 'RESET') return;
+  indexedDB.deleteDatabase('CospharmDB');
+  alert('Database reset. Redirecting to login...');
+  window.location.href = 'qa-login.html';
+}
+
+init();
+</script>
+</body>
+</html>

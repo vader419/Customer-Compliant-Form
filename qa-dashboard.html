@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center">
+      <div class="header-title">QA / Regulatory Portal</div>
+      <div class="header-sub">Cospharm Investment (Pty) Ltd</div>
+    </div>
+    <div class="header-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar"></div>
+        <span id="userChipName"></span>
+        <span class="badge badge-minor" id="userRoleBadge"></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="page-wrap">
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid fade-up" id="statGrid">
+    <div class="stat-card"><div class="stat-label">Total Complaints</div><div class="stat-value stat-total" id="statTotal">—</div><div class="stat-sub">All time</div></div>
+    <div class="stat-card"><div class="stat-label">Open</div><div class="stat-value stat-open" id="statOpen">—</div><div class="stat-sub">Awaiting review</div></div>
+    <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value stat-progress" id="statProgress">—</div><div class="stat-sub">Under investigation</div></div>
+    <div class="stat-card"><div class="stat-label">Resolved</div><div class="stat-value stat-closed" id="statClosed">—</div><div class="stat-sub">Avg <span id="statAvgDays">—</span> days</div></div>
+  </div>
+
+  <div class="chart-grid fade-up">
+    <!-- Monthly trend -->
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">📅 Monthly Complaint Trend</span></div>
+      <div class="chart-body"><div id="lineChartWrap"></div></div>
+    </div>
+    <!-- Category donut -->
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🎯 Complaints by Severity</span></div>
+      <div class="chart-body"><div id="donutWrap"></div></div>
+    </div>
+  </div>
+
+  <div class="chart-grid fade-up">
+    <!-- Top complaint types -->
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🔬 Top Complaint Types</span></div>
+      <div class="chart-body"><div id="typesBar"></div></div>
+    </div>
+    <!-- Top institutions -->
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🏥 Most Reporting Institutions</span></div>
+      <div class="chart-body"><div id="instBar"></div></div>
+    </div>
+  </div>
+
+  <!-- Recent complaints table -->
+  <div class="card fade-up">
+    <div class="card-header">
+      <span class="card-title">🕐 Recent Complaints</span>
+      <a href="qa-complaints.html" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Ref</th><th>Institution</th><th>Product</th><th>Type(s)</th><th>Severity</th><th>Status</th><th>Received</th><th>Action</th>
+        </tr></thead>
+        <tbody id="recentBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+async function init() {
+  const sess = await requireAuth();
+  if (!sess) return;
+  renderHeader(sess, 'dashboard');
+  
+  await loadDashboard();
+}
+
+async function loadDashboard() {
+  const stats = await DB.Complaints.getStats();
+
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statOpen').textContent = stats.open;
+  document.getElementById('statProgress').textContent = stats.inProgress;
+  document.getElementById('statClosed').textContent = stats.closed;
+  document.getElementById('statAvgDays').textContent = stats.avgDays;
+
+  renderLineChart('lineChartWrap', stats.monthly);
+  renderDonut('donutWrap', stats.catCounts, ['#15803d','#d97706','#dc2626','#9ca3af']);
+  renderBarChart('typesBar', stats.typeCounts, '#c0392b');
+  renderBarChart('instBar', stats.instCounts, '#2c3e6b');
+
+  // Recent complaints
+  const all = await DB.Complaints.getAll();
+  const recent = all.slice(0,8);
+  const tbody = document.getElementById('recentBody');
+  if (!recent.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-sub">No complaints yet</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(c => `
+    <tr>
+      <td class="td-ref">${c.ref}</td>
+      <td>${c.institution||'—'}</td>
+      <td>${c.genericName||'—'}</td>
+      <td class="td-muted">${(c.complaintTypes||[]).slice(0,2).join(', ')||'—'}</td>
+      <td>${categoryBadge(c.qaCategory)}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td class="td-muted">${fmtDate(c.createdAt)}</td>
+      <td><a href="qa-review.html?id=${c.id}" class="btn btn-ghost btn-sm">Review →</a></td>
+    </tr>`).join('');
+}
+
+init();
+</script>
+</body>
+</html>

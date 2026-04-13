@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Analytics — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.25rem; }
+.kpi-card { background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;box-shadow:var(--shadow);border-left:4px solid var(--navy); }
+.kpi-label { font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.35rem; }
+.kpi-val { font-size:1.6rem;font-weight:700;color:var(--navy); }
+.kpi-sub { font-size:.72rem;color:var(--muted);margin-top:.2rem; }
+.insights-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.25rem; }
+.insight-item { background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow);text-align:center; }
+.insight-icon { font-size:1.8rem;margin-bottom:.5rem; }
+.insight-title { font-size:.78rem;font-weight:600;color:var(--navy);margin-bottom:.25rem; }
+.insight-val { font-size:1.1rem;font-weight:700;color:var(--text); }
+.insight-sub { font-size:.72rem;color:var(--muted);margin-top:.2rem; }
+.top-list { display:flex;flex-direction:column;gap:.5rem; }
+.top-row { display:flex;justify-content:space-between;align-items:center;font-size:.83rem;padding:.4rem 0;border-bottom:1px dashed var(--border); }
+.top-row:last-child { border:none; }
+.top-rank { font-size:.72rem;font-weight:700;color:var(--muted);min-width:20px; }
+.top-name { flex:1;color:var(--text); }
+.top-count { font-weight:700;color:var(--navy); }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center"><div class="header-title">QA / Regulatory Portal</div><div class="header-sub">Cospharm Investment (Pty) Ltd</div></div>
+    <div class="header-right"><div class="user-chip"><div class="user-avatar" id="userAvatar"></div><span id="userChipName"></span><span class="badge badge-minor" id="userRoleBadge"></span></div></div>
+  </div>
+</header>
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="page-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy)">📈 Analytics &amp; Insights</h2>
+    <span class="td-muted" id="dataAsOf"></span>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row fade-up" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-label">Total Complaints</div><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-sub">All time</div></div>
+    <div class="kpi-card" style="border-color:var(--danger)"><div class="kpi-label">Critical Cases</div><div class="kpi-val" id="kpiCritical" style="color:var(--danger)">—</div><div class="kpi-sub">Require urgent attention</div></div>
+    <div class="kpi-card" style="border-color:var(--success)"><div class="kpi-label">Resolution Rate</div><div class="kpi-val" id="kpiRate" style="color:var(--success)">—</div><div class="kpi-sub">Complaints closed</div></div>
+  </div>
+
+  <!-- Insights row -->
+  <div class="insights-grid fade-up">
+    <div class="insight-item"><div class="insight-icon">⏱</div><div class="insight-title">Avg. Resolution Time</div><div class="insight-val" id="insAvgDays">—</div><div class="insight-sub">Days from open to close</div></div>
+    <div class="insight-item"><div class="insight-icon">🏥</div><div class="insight-title">Top Reporting Institution</div><div class="insight-val" id="insTopInst">—</div><div class="insight-sub" id="insTopInstCount"></div></div>
+    <div class="insight-item"><div class="insight-icon">💊</div><div class="insight-title">Most Common Complaint</div><div class="insight-val" id="insTopType" style="font-size:.95rem">—</div><div class="insight-sub" id="insTopTypeCount"></div></div>
+  </div>
+
+  <!-- Charts row 1 -->
+  <div class="chart-grid fade-up">
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">📅 Monthly Complaint Volume (Last 6 Months)</span></div>
+      <div class="chart-body"><div id="lineChart"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🎯 Complaints by Severity</span></div>
+      <div class="chart-body"><div id="catDonut"></div></div>
+    </div>
+  </div>
+
+  <!-- Charts row 2 -->
+  <div class="chart-grid fade-up">
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🔬 Complaint Types Breakdown</span></div>
+      <div class="chart-body"><div id="typesBar"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">⚖️ Decision / Outcome Breakdown</span></div>
+      <div class="chart-body"><div id="decisionsBar"></div></div>
+    </div>
+  </div>
+
+  <!-- Row 3 -->
+  <div class="chart-grid fade-up">
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🏥 Top Reporting Institutions</span></div>
+      <div class="chart-body"><div id="instBar"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">📊 Case Status Overview</span></div>
+      <div class="chart-body"><div id="statusDonut"></div></div>
+    </div>
+  </div>
+
+  <!-- Top lists -->
+  <div class="chart-grid fade-up">
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">🏆 Top 5 Products Complained About</span></div>
+      <div class="chart-body"><div class="top-list" id="topProducts"></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><span class="chart-title">📍 NMRC Reporting Required</span></div>
+      <div class="chart-body"><div id="nmrcDonut"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+async function init() {
+  const sess = await requireAuth();
+  if (!sess) return;
+  renderHeader(sess, 'analytics');
+  
+
+  document.getElementById('dataAsOf').textContent = `Data as of ${new Date().toLocaleDateString('en-NA',{day:'2-digit',month:'long',year:'numeric'})}`;
+
+  const stats = await DB.Complaints.getStats();
+  const all = await DB.Complaints.getAll();
+
+  // KPIs
+  document.getElementById('kpiTotal').textContent = stats.total;
+  document.getElementById('kpiCritical').textContent = stats.catCounts.Critical || 0;
+  const rate = stats.total ? Math.round((stats.closed/stats.total)*100) : 0;
+  document.getElementById('kpiRate').textContent = rate + '%';
+
+  // Insights
+  document.getElementById('insAvgDays').textContent = stats.avgDays ? stats.avgDays + ' days' : 'N/A';
+
+  const topInst = Object.entries(stats.instCounts).sort((a,b)=>b[1]-a[1])[0];
+  if (topInst) { document.getElementById('insTopInst').textContent=topInst[0]; document.getElementById('insTopInstCount').textContent=`${topInst[1]} complaint(s)`; }
+
+  const topType = Object.entries(stats.typeCounts).sort((a,b)=>b[1]-a[1])[0];
+  if (topType) { document.getElementById('insTopType').textContent=topType[0]; document.getElementById('insTopTypeCount').textContent=`${topType[1]} occurrence(s)`; }
+
+  // Charts
+  renderLineChart('lineChart', stats.monthly);
+  renderDonut('catDonut', stats.catCounts, ['#15803d','#d97706','#dc2626','#9ca3af']);
+  renderBarChart('typesBar', stats.typeCounts, '#c0392b', 10);
+  renderBarChart('decisionsBar', stats.decisions, '#2c3e6b');
+  renderBarChart('instBar', stats.instCounts, '#0e7490');
+  renderDonut('statusDonut', { Open:stats.open, 'In Progress':stats.inProgress, Closed:stats.closed }, ['#3b82f6','#d97706','#16a34a']);
+
+  // Top products
+  const prodCounts = {};
+  all.forEach(c => { if (c.genericName) prodCounts[c.genericName]=(prodCounts[c.genericName]||0)+1; });
+  const top5 = Object.entries(prodCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('topProducts').innerHTML = top5.length
+    ? top5.map(([name,count],i)=>`<div class="top-row"><span class="top-rank">#${i+1}</span><span class="top-name">${name}</span><span class="top-count">${count}</span></div>`).join('')
+    : '<div class="empty-state"><div class="empty-sub">No data</div></div>';
+
+  // NMRC
+  const nmrcYes = all.filter(c=>c.qaNMRCRequired==='Yes').length;
+  const nmrcNo = all.filter(c=>c.qaNMRCRequired==='No').length;
+  const nmrcPending = all.filter(c=>!c.qaNMRCRequired).length;
+  renderDonut('nmrcDonut', { 'Required':nmrcYes, 'Not Required':nmrcNo, 'Pending':nmrcPending }, ['#dc2626','#16a34a','#9ca3af']);
+}
+init();
+</script>
+</body>
+</html>

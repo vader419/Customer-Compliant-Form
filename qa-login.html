@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>QA Portal Login — Cospharm</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:linear-gradient(135deg,#1a2444 0%,#2c3e6b 60%,#3a4f8a 100%); }
+.login-card { background:white; border-radius:18px; padding:3rem 2.5rem; width:100%; max-width:400px; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:fadeUp .5s ease; }
+.login-logo { text-align:center; margin-bottom:1.75rem; }
+.login-logo img { height:56px; }
+.login-title { font-size:1.25rem; font-weight:700; color:var(--navy); margin-bottom:.25rem; text-align:center; }
+.login-sub { font-size:.8rem; color:var(--muted); text-align:center; margin-bottom:2rem; }
+.login-field { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1rem; }
+.login-error { background:var(--danger-light); border:1px solid #fca5a5; color:var(--danger); border-radius:var(--radius-sm); padding:.65rem 1rem; font-size:.8rem; font-weight:500; margin-bottom:1rem; display:none; }
+.login-btn { width:100%; padding:.75rem; background:var(--navy); color:white; border:none; border-radius:var(--radius-sm); font-size:.9rem; font-weight:600; cursor:pointer; transition:all .2s; margin-top:.5rem; }
+.login-btn:hover { background:var(--navy-h); transform:translateY(-1px); box-shadow:0 4px 12px rgba(44,62,107,.35); }
+.login-hint { text-align:center; font-size:.73rem; color:var(--muted); margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid var(--border); }
+.login-hint strong { color:var(--navy); }
+.lock-icon { font-size:2rem; margin-bottom:.5rem; }
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo"><img src="cospharm.png" alt="Cospharm"></div>
+  <div style="text-align:center;margin-bottom:1.5rem"><div class="lock-icon">🔐</div></div>
+  <div class="login-title">Quality Assurance Hub</div>
+  <div class="login-sub">Cospharm Investment (Pty) Ltd — Restricted Access</div>
+
+  <div class="login-error" id="loginError"></div>
+
+  <div class="login-field">
+    <label class="field-label">Username</label>
+    <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+  </div>
+  <div class="login-field">
+    <label class="field-label">Password</label>
+    <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+  </div>
+
+  <button class="login-btn" onclick="doLogin()" id="loginBtn">Sign In →</button>
+
+  <div class="login-hint">
+    Contact your system administrator if you need access.
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+async function init() {
+  await DB.Users.ensureDefaultAdmin();
+  // If already logged in, redirect
+  const sess = await DB.Session.get();
+  if (sess) window.location.href = 'qa-dashboard.html';
+}
+init();
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  if (!username || !password) { showError('Please enter username and password.'); return; }
+
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+
+  const user = await DB.Users.authenticate(username, password);
+  if (!user) {
+    showError('Invalid username or password. Please try again.');
+    btn.textContent = 'Sign In →'; btn.disabled = false;
+    return;
+  }
+
+  await DB.Session.save(user);
+  await DB.Audit.log({ action: 'USER_LOGIN', detail: `User logged in: ${user.username} (${user.role})`, userId: user.id, userName: user.fullName });
+  
+  window.location.href = 'qa-dashboard.html';
+}
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

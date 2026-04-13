@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Complaints — Cospharm QA Portal</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.filter-bar { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; margin-bottom:1.25rem; display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; box-shadow:var(--shadow); }
+.filter-item { display:flex; flex-direction:column; gap:.3rem; }
+.filter-item select, .filter-item input { min-width:160px; padding:.5rem .75rem; }
+.tbl-actions { display:flex; gap:.4rem; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo-wrap"><img src="cospharm.png" alt="Cospharm"></div>
+    <div class="header-center"><div class="header-title">QA / Regulatory Portal</div><div class="header-sub">Cospharm Investment (Pty) Ltd</div></div>
+    <div class="header-right">
+      <div class="user-chip"><div class="user-avatar" id="userAvatar"></div><span id="userChipName"></span><span class="badge badge-minor" id="userRoleBadge"></span></div>
+    </div>
+  </div>
+</header>
+<nav class="qa-nav"><div class="qa-nav-inner" id="qaNav"></div></nav>
+
+<div class="page-wrap">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+    <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy)">📋 All Complaints</h2>
+    <a href="qa-review.html" class="btn btn-primary">+ New Review</a>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-item">
+      <label class="field-label">Status</label>
+      <select id="filterStatus" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="open">Open</option>
+        <option value="in_progress">In Progress</option>
+        <option value="closed">Closed</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label class="field-label">Severity</label>
+      <select id="filterCategory" onchange="applyFilters()">
+        <option value="">All Severities</option>
+        <option value="Minor">Minor</option>
+        <option value="Major">Major</option>
+        <option value="Critical">Critical</option>
+        <option value="Unclassified">Unclassified</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label class="field-label">Search</label>
+      <input type="text" id="filterSearch" placeholder="Ref, product, institution…" oninput="applyFilters()">
+    </div>
+    <div class="filter-item">
+      <label class="field-label">Sort By</label>
+      <select id="filterSort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="critical">Critical First</option>
+      </select>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title" id="tableTitle">Complaints</span>
+      <span class="td-muted" id="resultCount"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Ref</th><th>Date</th><th>Institution</th><th>Product</th><th>Complaint Types</th><th>Severity</th><th>Status</th><th>QA Assigned</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="complaintsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="db.js"></script><script src="qa-utils.js"></script>
+<script>
+let allComplaints = [];
+
+async function init() {
+  const sess = await requireAuth();
+  if (!sess) return;
+  renderHeader(sess, 'complaints');
+  allComplaints = await DB.Complaints.getAll();
+  applyFilters();
+}
+
+function applyFilters() {
+  const status = document.getElementById('filterStatus').value;
+  const cat = document.getElementById('filterCategory').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const sort = document.getElementById('filterSort').value;
+
+  let list = allComplaints.filter(c => {
+    if (status && c.status !== status) return false;
+    const cCat = c.qaCategory || 'Unclassified';
+    if (cat && cCat !== cat) return false;
+    if (search) {
+      const haystack = [c.ref, c.institution, c.genericName, c.tradeName, c.contactPerson].join(' ').toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (sort === 'oldest') list.sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+  else if (sort === 'critical') list.sort((a,b)=>{ const o={Critical:0,Major:1,Minor:2,Unclassified:3}; return (o[a.qaCategory||'Unclassified']||3)-(o[b.qaCategory||'Unclassified']||3); });
+  else list.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  document.getElementById('resultCount').textContent = `${list.length} record${list.length!==1?'s':''}`;
+  renderTable(list);
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('complaintsBody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No complaints found</div><div class="empty-sub">Try adjusting your filters</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td class="td-ref">${c.ref}</td>
+      <td class="td-muted">${fmtDate(c.createdAt)}<br><span style="font-size:.68rem">${fmtDaysAgo(c.createdAt)}</span></td>
+      <td>${c.institution||'—'}</td>
+      <td><strong>${c.genericName||'—'}</strong><br><span class="td-muted">${c.tradeName||''}</span></td>
+      <td class="td-muted" style="max-width:200px;font-size:.75rem">${(c.complaintTypes||[]).join(', ')||'—'}</td>
+      <td>${categoryBadge(c.qaCategory)}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td class="td-muted">${c.qaPharmacist||'<em>Unassigned</em>'}</td>
+      <td>
+        <div class="tbl-actions">
+          <a href="qa-review.html?id=${c.id}" class="btn btn-ghost btn-sm">Open</a>
+          ${c.status!=='closed'?`<button onclick="quickClose(${c.id})" class="btn btn-ghost btn-sm" style="color:var(--success)">✓ Close</button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function quickClose(id) {
+  if (!confirm('Mark this complaint as closed?')) return;
+  const sess = await DB.Session.get();
+  await DB.Complaints.updateStatus(id, 'closed', sess.userId, sess.fullName);
+  allComplaints = await DB.Complaints.getAll();
+  applyFilters();
+}
+
+function clearFilters() {
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterSearch').value = '';
+  document.getElementById('filterSort').value = 'newest';
+  applyFilters();
+}
+
+init();
+</script>
+</body>
+</html>

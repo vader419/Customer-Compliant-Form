@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Product Quality Complaint — Cospharm Investment (Pty) Ltd</title>
+<link rel="icon" href="CospharmTop.png" type="image/x-icon">
+<link rel="stylesheet" href="style.css">
+<style>
+.client-header { background:white; border-bottom:1px solid var(--border); box-shadow:var(--shadow); }
+.client-header-inner { max-width:960px;margin:0 auto;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem; }
+.client-header-inner img { height:50px; }
+.hdr-text { text-align:right; }
+.hdr-title { font-size:1rem;font-weight:700;color:var(--navy); }
+.hdr-sub { font-size:.72rem;color:var(--muted); }
+.qa-link { font-size:.72rem;color:var(--navy);text-decoration:none;padding:.3rem .7rem;border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s; }
+.qa-link:hover{background:var(--navy-light)}
+</style>
+</head>
+<body>
+
+<header class="client-header">
+  <div class="client-header-inner">
+    <img src="cospharm.png" alt="Cospharm Investment (Pty) Ltd">
+    <div class="hdr-text">
+      <div class="hdr-title">Product Quality Complaint Form</div>
+      <div class="hdr-sub">Cospharm Investment (Pty) Ltd</div>
+    </div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <span class="progress-label">Form Completion</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+</div>
+
+<div class="form-wrap">
+
+  <!-- S1: CUSTOMER DETAILS -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">1</span><span class="section-title">Reporter Details</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="field"><label class="field-label">Date Complaint Received</label><input type="date" id="dateReceived" class="t"></div>
+      <div class="field"><label class="field-label">Method of Complaint</label>
+        <div class="check-group" id="methodGroup">
+          <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Email</span></label>
+          <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Phone</span></label>
+          <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>In Person</span></label>
+          <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>WhatsApp</span></label>
+          <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Other</span></label>
+        </div>
+      </div>
+      <div class="field full"><label class="field-label">Name of Institution / Facility</label><input type="text" id="institution" placeholder="Your institution or facility name" class="t"></div>
+      <div class="field"><label class="field-label">Contact Person</label><input type="text" id="contactPerson" placeholder="Full name" class="t"></div>
+      <div class="field"><label class="field-label">Designation / Role</label><input type="text" id="designation" placeholder="Your job title" class="t"></div>
+      <div class="field"><label class="field-label">Telephone</label><input type="tel" id="contactPhone" placeholder="+264 ..." class="t"></div>
+      <div class="field"><label class="field-label">Email Address</label><input type="email" id="contactEmail" placeholder="your@email.com" class="t"></div>
+      <div class="field full"><label class="field-label">Physical Address</label><input type="text" id="address" placeholder="Street, City, Region" class="t"></div>
+    </div>
+  </div>
+
+  <!-- S2: PRODUCT DETAILS -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">2</span><span class="section-title">Product Details</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col3">
+      <div class="field"><label class="field-label">Trade / Brand Name</label><input type="text" id="tradeName" placeholder="Brand name" class="t"></div>
+      <div class="field"><label class="field-label">Generic Name</label><input type="text" id="genericName" placeholder="INN / Generic" class="t"></div>
+      <div class="field"><label class="field-label">Dosage Form</label><input type="text" id="dosageForm" placeholder="e.g. Tablet" class="t"></div>
+      <div class="field"><label class="field-label">Strength</label><input type="text" id="strength" placeholder="e.g. 500mg" class="t"></div>
+      <div class="field"><label class="field-label">Pack Size</label><input type="text" id="packSize" placeholder="e.g. 30 tablets" class="t"></div>
+      <div class="field"><label class="field-label">Manufacturer</label><input type="text" id="manufacturer" placeholder="Manufacturer" class="t"></div>
+      <div class="field"><label class="field-label">Batch / Lot Number(s)</label><input type="text" id="batchNo" placeholder="Batch number" class="t"></div>
+      <div class="field"><label class="field-label">Expiry Date(s)</label><input type="date" id="expiryDate" class="t"></div>
+      <div class="field"><label class="field-label">Invoice No.</label><input type="text" id="invoiceNo" placeholder="Invoice" class="t"></div>
+      <div class="field"><label class="field-label">Qty Received</label><input type="number" id="quantityReceived" placeholder="Units" class="t"></div>
+      <div class="field"><label class="field-label">Qty Affected</label><input type="number" id="quantityAffected" placeholder="Units" class="t"></div>
+      <div class="field"><label class="field-label">Date Received by Customer</label><input type="date" id="dateReceivedByCustomer" class="t"></div>
+      <div class="field full"><label class="field-label">Storage Conditions at Facility</label>
+        <div class="radio-group">
+          <label class="radio-item" onclick="toggleRadio(this,'storage');track()"><input type="radio" name="storage"><span class="radio-dot"></span><span>2–8°C</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'storage');track()"><input type="radio" name="storage"><span class="radio-dot"></span><span>15-25°C</span></label>
+          <label class="radio-item" onclick="toggleRadio(this,'storage');track()"><input type="radio" name="storage"><span class="radio-dot"></span><span>Room Temperature</span></label>
+          <div class="field"><label class="field-label">Other Conditions</label><input type="text" id="otherConditions" placeholder="Describe..." class="t"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: COMPLAINT TYPE -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">3</span><span class="section-title">Type of Complaint <span style="font-weight:400;color:var(--muted)">(tick all applicable)</span></span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col1">
+      <div class="subsection-title">A. Product Quality Defect</div>
+      <div class="check-group" id="typeGroupA">
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Broken tablets</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Cracked ampoules/vials</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Leakage</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Discolouration</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Foreign particles</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Labelling error</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Missing leaflet/package insert</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Incorrect strength</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Packaging defect</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Seal integrity compromised</span></label>
+      </div>
+      <div class="field"><label class="field-label">Other quality defect</label><input type="text" id="otherDefect" placeholder="Describe..." class="t"></div>
+
+      <div class="subsection-title">B. Distribution / Logistics Issues</div>
+      <div class="check-group" id="typeGroupB">
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Cold chain breach suspected</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Damaged during transit</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Short supply</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Wrong batch supplied</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Wrong product supplied</span></label>
+      </div>
+      <div class="field"><label class="field-label">Other distribution / logistics issue</label><input type="text" id="otherLogistics" placeholder="Describe..." class="t"></div>
+
+      <div class="subsection-title">C. Clinical / Patient Related</div>
+      <div class="check-group" id="typeGroupC">
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Lack of efficacy</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Adverse reaction</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Other clinical concern</span></label>
+      </div>
+      <div class="field"><label class="field-label">Other clinical / patient concern</label><input type="text" id="otherClinical" placeholder="Describe..." class="t"></div>
+    </div>
+  </div>
+
+  <!-- S4: DESCRIPTION -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">4</span><span class="section-title">Detailed Description of Complaint</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col1">
+      <div class="field"><label class="field-label">Description — include timeline</label><textarea id="description" rows="6" placeholder="Clear, factual description including when it was first noticed..." class="t"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="field"><label class="field-label">Photographs Available?</label>
+          <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'photos');track()"><input type="radio" name="photos"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'photos');track()"><input type="radio" name="photos"><span class="radio-dot"></span><span>No</span></label></div>
+        </div>
+        <div class="field"><label class="field-label">Sample Available for Return?</label>
+          <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'sample');track()"><input type="radio" name="sample"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'sample');track()"><input type="radio" name="sample"><span class="radio-dot"></span><span>No</span></label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: FREQUENCY & IMPACT -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">5</span><span class="section-title">Frequency &amp; Impact</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="field"><label class="field-label">Entire Batch Affected?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'batch');track()"><input type="radio" name="batch"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'batch');track()"><input type="radio" name="batch"><span class="radio-dot"></span><span>No</span></label><label class="radio-item" onclick="toggleRadio(this,'batch');track()"><input type="radio" name="batch"><span class="radio-dot"></span><span>Unknown</span></label></div>
+      </div>
+      <div class="field"><label class="field-label">Estimated % Affected (Product)</label><input type="number" id="pctAffected" placeholder="e.g. 25" min="0" max="100" class="t"></div>
+      <div class="field"><label class="field-label">Any Patient Harm Reported?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'harm');track()"><input type="radio" name="harm"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'harm');track()"><input type="radio" name="harm"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+      <div class="field"><label class="field-label">Product Used on Patients?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'used');track()"><input type="radio" name="used"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'used');track()"><input type="radio" name="used"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+      <div class="field full"><label class="field-label">Has Product Been Quarantined?</label>
+        <div class="radio-group"><label class="radio-item" onclick="toggleRadio(this,'qrtn');track()"><input type="radio" name="qrtn"><span class="radio-dot"></span><span>Yes</span></label><label class="radio-item" onclick="toggleRadio(this,'qrtn');track()"><input type="radio" name="qrtn"><span class="radio-dot"></span><span>No</span></label></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: ACTION -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">6</span><span class="section-title">Action Taken by You</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body col1">
+      <div class="check-group" id="actionsGroup">
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Product recalled</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Product quarantined</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Product returned</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Product dispensed</span></label>
+        <label class="check-item"><input type="checkbox" onchange="toggleCheck(this.closest('.check-item'));track()"><span class="check-box"></span><span>Incident reported to NMRC</span></label>
+      </div>
+      <div class="field"><label class="field-label">Other action</label><input type="text" id="otherAction" placeholder="Describe any other actions..." class="t"></div>
+    </div>
+  </div>
+
+  <!-- S7: DECLARATION -->
+  <div class="form-section">
+    <div class="section-head" onclick="toggleSection(this)">
+      <span class="section-num">7</span><span class="section-title">Declaration</span><span class="section-toggle">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="info-box">I confirm that the information provided is accurate to the best of my knowledge.</div>
+      <div class="field"><label class="field-label">Full Name</label><input type="text" id="declName" placeholder="Your full name" class="t"></div>
+      <div class="field"><label class="field-label">Date</label><input type="date" id="declDate" class="t"></div>
+      <div class="field full"><label class="field-label">Signature — type your full name</label><input type="text" id="declSignature" placeholder="Type your full name as your signature" class="t" style="font-style:italic"></div>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <div class="footer-note"><strong>Note:</strong> Attach photographs or supporting documents where possible. Your complaint will be reviewed by our Quality Assurance / Regulatory Team within 24 hours.</div>
+    <div style="display:flex;gap:.75rem">
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+      <button class="btn btn-primary" onclick="submitComplaint()">Submit Complaint →</button>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon" style="background:var(--success-light)">✅</div>
+    <div class="modal-title">Complaint Submitted!</div>
+    <p class="modal-msg">
+      Your complaint has successfully been submitted.<br><br>
+      Our <strong>Quality Assurance / Regulatory Team</strong> will reach out to provide feedback.<br><br>
+      If you haven't received any feedback within <strong>24 hours</strong>, please contact <strong>083 331 2580</strong>.<br><br>
+      Your reference number: <strong id="successRef" style="font-family:monospace;font-size:1rem;color:var(--navy)"></strong><br><br>
+      Thank you!
+    </p>
+    <div class="social-section">
+      <div class="social-label">Follow us for upcoming events, sales &amp; more</div>
+      <div class="social-links">
+        <a href="https://www.facebook.com/CospharmGroup" target="_blank" class="social-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
+        </a>
+        <a href="https://www.instagram.com/cospharmgroup/" target="_blank" class="social-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>Instagram
+        </a>
+        <a href="https://www.linkedin.com/company/cospharm-group/" target="_blank" class="social-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn
+        </a>
+        <a href="https://www.cospharm.org" target="_blank" class="social-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>Website
+        </a>
+        <a href="https://whatsapp.com/channel/0029VbDXpqHDOQIXOtNo2C0E" target="_blank" class="social-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp
+        </a>
+      </div>
+    </div>
+    <div class="modal-btn-group">
+      <button class="btn btn-ghost" onclick="closeModal()">Close Window</button>
+      <button class="btn btn-primary" onclick="newComplaint()">Submit Another</button>
+    </div>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+
+const EMAILJS_PUBLIC_KEY  = 'fFy6RDXcw2K6cMrI2';   // Account > API Keys
+const EMAILJS_SERVICE_ID  = 'service_87g2h1n';   // Email Services tab
+const EMAILJS_TEMPLATE_ID = 'template_xhyeuad';  // Email Templates tab
+
+// Recipients — all will receive a notification on each submission
+const NOTIFICATION_RECIPIENTS = [
+  'operationsna@cospharm.org',
+  'regulatoryna1@cospharm.org',
+  'regulatoryna@cospharm.org',
+  'regulatoryna2@cospharm.org',
+  'marketingna@cospharm.org',
+  'gmnam@cospharm.org',
+  'supportna@cospharm.org',
+];
+
+async function sendEmailNotification(data, ref) {
+  if (EMAILJS_PUBLIC_KEY === 'YOUR_EMAILJS_PUBLIC_KEY') {
+    console.warn('EmailJS not configured — skipping email notification.');
+    return;
+  }
+  try {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    const to = NOTIFICATION_RECIPIENTS.join(', ');
+    const types = (data.complaintTypes || []).join(', ') || '—';
+    const params = {
+      to_email:         to,
+      from_name:        'Cospharm QA Portal',
+      reply_to:         'notifications@cospharm.org',
+      complaint_ref:    ref,
+      institution:      data.institution      || '—',
+      contact_person:   data.contactPerson    || '—',
+      contact_phone:    data.contactPhone     || '—',
+      contact_email:    data.contactEmail     || '—',
+      product_name:     (data.genericName || data.tradeName || '—'),
+      batch_no:         data.batchNo          || '—',
+      complaint_types:  types,
+      description:      data.description      || '—',
+      patient_harm:     data.patientHarm      || '—',
+      quarantined:      data.productQuarantined || '—',
+      date_received:    data.dateReceived     || new Date().toLocaleDateString(),
+      portal_link:      window.location.origin + '/qa-complaints.html',
+    };
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+    console.log('Notification email sent to QA team.');
+  } catch (err) {
+    // Non-blocking — don't fail submission if email fails
+    console.error('Email notification failed:', err);
+  }
+}
+
+function toggleSection(h){h.classList.toggle('collapsed');h.nextElementSibling.style.display=h.classList.contains('collapsed')?'none':'';}
+function toggleCheck(el){
+     const cb = el.querySelector('input[type="checkbox"]');
+     cb.checked ? el.classList.add('checked') : el.classList.remove('checked');
+   }
+function toggleRadio(el,name){document.querySelectorAll(`.radio-item input[name="${name}"]`).forEach(r=>r.closest('.radio-item').classList.remove('selected'));el.classList.add('selected');}
+function getChecked(container){return[...container.querySelectorAll('.check-item.checked')].map(el=>el.querySelector('span:last-child').textContent.trim());}
+function getSelected(name){const el=document.querySelector(`.radio-item.selected input[name="${name}"]`);return el?el.closest('.radio-item').querySelector('span:last-child')?.textContent.trim():'';}
+function g(id){return document.getElementById(id)?.value?.trim()||'';}
+
+function track(){
+  // --- text / textarea inputs ---
+  const inputs = document.querySelectorAll('input.t, textarea.t');
+  let filledInputs = 0;
+  inputs.forEach(i => { if (i.value.trim()) filledInputs++; });
+
+  // --- radio groups: each unique [name] counts as 1 slot; selected = 1 point ---
+  const radioNames = [...new Set(
+    [...document.querySelectorAll('.radio-item input[type="radio"]')].map(r => r.name)
+  )];
+  const radioTotal    = radioNames.length;
+  const radioSelected = radioNames.filter(name =>
+    document.querySelector(`.radio-item.selected input[name="${name}"]`)
+  ).length;
+
+  // --- checkbox groups: each group counts as 1 slot; ≥1 checked = 1 point ---
+  const checkGroups = document.querySelectorAll('.check-group');
+  const checkTotal    = checkGroups.length;
+  const checkSelected = [...checkGroups].filter(g =>
+    g.querySelector('.check-item.checked')
+  ).length;
+
+  const total = inputs.length + radioTotal + checkTotal;
+  const filled = filledInputs + radioSelected + checkSelected;
+  const pct = Math.min(100, Math.round((filled / total) * 100));
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent  = pct + '%';
+}
+document.querySelectorAll('input.t,textarea.t').forEach(el=>el.addEventListener('input',track));
+
+async function submitComplaint(){
+  if (!g('institution')&&!g('contactPerson')&&!g('genericName')) {
+    alert('Please fill in at least the institution, contact person, and product name.');
+    return;
+  }
+  const allTypes=[
+    ...getChecked(document.getElementById('typeGroupA')),
+    ...getChecked(document.getElementById('typeGroupB')),
+    ...getChecked(document.getElementById('typeGroupC')),
+  ];
+  const data={
+    institution:g('institution'), contactPerson:g('contactPerson'), designation:g('designation'),
+    contactPhone:g('contactPhone'), contactEmail:g('contactEmail'), dateReceived:g('dateReceived'),
+    address:g('address'), complaintMethods:getChecked(document.getElementById('methodGroup')),
+    genericName:g('genericName'), tradeName:g('tradeName'), dosageForm:g('dosageForm'),
+    strength:g('strength'), packSize:g('packSize'), manufacturer:g('manufacturer'),
+    batchNo:g('batchNo'), expiryDate:g('expiryDate'), invoiceNo:g('invoiceNo'),
+    quantityReceived:g('quantityReceived'), quantityAffected:g('quantityAffected'),
+    dateReceivedByCustomer:g('dateReceivedByCustomer'), storageConditions:getSelected('storage'),
+    complaintTypes:allTypes, otherDefect:g('otherDefect'), otherLogistics:g('otherLogistics'), otherClinical:g('otherClinical'), description:g('description'),
+    photosAvailable:getSelected('photos'), sampleAvailable:getSelected('sample'),
+    entireBatchAffected:getSelected('batch'), pctAffected:g('pctAffected'),
+    patientHarm:getSelected('harm'), productUsedOnPatients:getSelected('used'),
+    productQuarantined:getSelected('qrtn'),
+    actionsToken:getChecked(document.getElementById('actionsGroup')), otherAction:g('otherAction'),
+    declName:g('declName'), declDate:g('declDate'), declSignature:g('declSignature'),
+    submittedViaForm:true, source:'client_form'
+  };
+
+  try {
+    const {ref} = await DB.Complaints.create(data);
+    // Send email notification to QA team (non-blocking)
+    sendEmailNotification(data, ref);
+    document.getElementById('successRef').textContent = ref;
+    document.getElementById('successModal').classList.add('show');
+  } catch(e) {
+    alert('Error submitting complaint. Please try again.\n\n'+e.message);
+  }
+}
+
+function closeModal(){document.getElementById('successModal').classList.remove('show');}
+function newComplaint(){closeModal();clearForm();}
+
+function clearForm(){
+  if(!confirm('Clear all data?'))return;
+  document.querySelectorAll('input.t,textarea.t').forEach(i=>i.value='');
+  document.querySelectorAll('.check-item').forEach(c=>c.classList.remove('checked'));
+  document.querySelectorAll('.radio-item').forEach(r=>r.classList.remove('selected'));
+  track();
+}
+
+document.getElementById('successModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// Set today
+document.getElementById('dateReceived').value=new Date().toISOString().split('T')[0];
+document.getElementById('declDate').value=new Date().toISOString().split('T')[0];
+
+// Init DB
+DB.Users.ensureDefaultAdmin();
+</script>
+</body>
+</html>
