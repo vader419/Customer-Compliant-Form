@@ -49,24 +49,31 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="db.js"></script>
-<script>
-async function init() {
 
-  // Create default users
+<script>
+
+// Seed users into localStorage if they don't exist
+async function seedUsers() {
+
+  const users = JSON.parse(localStorage.getItem('qa_users') || '[]');
+
   const defaultUsers = [
     {
+      id: 1,
       username: 'Admin',
       password: 'Cospharm876!',
       fullName: 'System Administrator',
       role: 'Admin'
     },
     {
+      id: 2,
       username: 'qa',
       password: 'QA876!',
       fullName: 'QA User',
       role: 'QA'
     },
     {
+      id: 3,
       username: 'supportna',
       password: '!*Vader@419*!',
       fullName: 'Support Namibia',
@@ -74,26 +81,36 @@ async function init() {
     }
   ];
 
-  // Ensure users exist
-  for (const user of defaultUsers) {
-    const existing = await DB.Users.findByUsername(user.username);
+  defaultUsers.forEach(user => {
+    const exists = users.find(u => u.username === user.username);
 
-    if (!existing) {
-      await DB.Users.create(user);
+    if (!exists) {
+      users.push(user);
     }
-  }
+  });
 
-  // If already logged in, redirect
+  localStorage.setItem('qa_users', JSON.stringify(users));
+}
+
+async function init() {
+
+  await seedUsers();
+
+  // If already logged in
   const sess = await DB.Session.get();
-  if (sess) window.location.href = 'qa-dashboard.html';
+
+  if (sess) {
+    window.location.href = 'qa-dashboard.html';
+  }
 }
 
 init();
 
 async function doLogin() {
+
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
-  const errEl = document.getElementById('loginError');
+
   const btn = document.getElementById('loginBtn');
 
   if (!username || !password) {
@@ -104,25 +121,24 @@ async function doLogin() {
   btn.textContent = 'Signing in…';
   btn.disabled = true;
 
-  const user = await DB.Users.authenticate(username, password);
+  // Read users from localStorage
+  const users = JSON.parse(localStorage.getItem('qa_users') || '[]');
+
+  const user = users.find(
+    u => u.username === username && u.password === password
+  );
 
   if (!user) {
-    showError('Invalid username or password. Please try again.');
+    showError('Invalid username or password.');
     btn.textContent = 'Sign In →';
     btn.disabled = false;
     return;
   }
+  
+  // Save session using existing DB session system
+await DB.Session.save(user);
 
-  await DB.Session.save(user);
-
-  await DB.Audit.log({
-    action: 'USER_LOGIN',
-    detail: `User logged in: ${user.username} (${user.role})`,
-    userId: user.id,
-    userName: user.fullName
-  });
-
-  window.location.href = 'qa-dashboard.html';
+window.location.href = 'qa-dashboard.html';
 }
 
 function showError(msg) {
@@ -134,6 +150,7 @@ function showError(msg) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter') doLogin();
 });
+
 </script>
 </body>
 </html>

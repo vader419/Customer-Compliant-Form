@@ -9,8 +9,8 @@
  * ───────────────────────────────────────────────────────────────────────────
  */
 
-const SUPABASE_URL  = 'YOUR_SUPABASE_URL';   // e.g. https://xyzabc.supabase.co
-const SUPABASE_KEY  = 'YOUR_SUPABASE_ANON_KEY'; // your project's anon/public key
+const SUPABASE_URL  = 'https://wvjtvaawfoihjrrscxdz.supabase.co'
+const SUPABASE_KEY  = 'sb_publishable_-MnUp_L3WE6jjyo4w4J_4Q_SpTYztE0'; // your project's anon/public key
 
 // ── Load Supabase client from CDN ────────────────────────────────────────────
 // (added to each HTML page via <script> tag — see the HTML files)
