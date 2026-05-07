@@ -51,11 +51,43 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <script src="db.js"></script>
 <script>
 async function init() {
-  await DB.Users.ensureDefaultAdmin();
+
+  // Create default users
+  const defaultUsers = [
+    {
+      username: 'Admin',
+      password: 'Cospharm876!',
+      fullName: 'System Administrator',
+      role: 'Admin'
+    },
+    {
+      username: 'qa',
+      password: 'QA876!',
+      fullName: 'QA User',
+      role: 'QA'
+    },
+    {
+      username: 'supportna',
+      password: '!*Vader@419*!',
+      fullName: 'Support Namibia',
+      role: 'Support'
+    }
+  ];
+
+  // Ensure users exist
+  for (const user of defaultUsers) {
+    const existing = await DB.Users.findByUsername(user.username);
+
+    if (!existing) {
+      await DB.Users.create(user);
+    }
+  }
+
   // If already logged in, redirect
   const sess = await DB.Session.get();
   if (sess) window.location.href = 'qa-dashboard.html';
 }
+
 init();
 
 async function doLogin() {
@@ -64,29 +96,44 @@ async function doLogin() {
   const errEl = document.getElementById('loginError');
   const btn = document.getElementById('loginBtn');
 
-  if (!username || !password) { showError('Please enter username and password.'); return; }
+  if (!username || !password) {
+    showError('Please enter username and password.');
+    return;
+  }
 
-  btn.textContent = 'Signing in…'; btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
 
   const user = await DB.Users.authenticate(username, password);
+
   if (!user) {
     showError('Invalid username or password. Please try again.');
-    btn.textContent = 'Sign In →'; btn.disabled = false;
+    btn.textContent = 'Sign In →';
+    btn.disabled = false;
     return;
   }
 
   await DB.Session.save(user);
-  await DB.Audit.log({ action: 'USER_LOGIN', detail: `User logged in: ${user.username} (${user.role})`, userId: user.id, userName: user.fullName });
-  
+
+  await DB.Audit.log({
+    action: 'USER_LOGIN',
+    detail: `User logged in: ${user.username} (${user.role})`,
+    userId: user.id,
+    userName: user.fullName
+  });
+
   window.location.href = 'qa-dashboard.html';
 }
 
 function showError(msg) {
   const el = document.getElementById('loginError');
-  el.textContent = msg; el.style.display = 'block';
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
 </script>
 </body>
 </html>
